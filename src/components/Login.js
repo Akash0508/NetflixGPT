@@ -1,8 +1,88 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Header from './Header';
+import { validateForm } from '../utils/validation';
+import {
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    updateProfile,
+} from 'firebase/auth';
+import { AUTH } from '../utils/firebase';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../redux/userSlice';
 
 const Login = () => {
-    const [signIn, setSignIn] = useState(true);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const [isSignInForm, setSignIn] = useState(true);
+    const [errMessage, setErrMessage] = useState(null);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const email = useRef();
+    const password = useRef();
+    const name = useRef();
+    const handleSubmitForm = () => {
+        let error = validateForm(
+            email?.current?.value,
+            password?.current?.value,
+            name?.current?.value
+        );
+        setErrMessage(error);
+        if (error) return;
+
+        if (!isSignInForm) {
+            //Sign up
+            createUserWithEmailAndPassword(
+                AUTH,
+                email?.current?.value,
+                password?.current?.value
+            )
+                .then((userCredential) => {
+                    // Signed up
+                    const user = userCredential.user;
+                    updateProfile(user, {
+                        displayName: name.current.value,
+                        photoURL:
+                            'https://avatars.githubusercontent.com/u/37516842?v=4',
+                    }).then(() => {
+                        const { uid, email, displayName, photoURL } =
+                            AUTH.currentUser;
+                        dispatch(
+                            addUser({
+                                uid: uid,
+                                email: email,
+                                displayName: displayName,
+                                photoURL: photoURL,
+                            })
+                        );
+                    });
+                    navigate('/browse');
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    setErrMessage(errorCode + '-' + errorMessage);
+                });
+        } else {
+            //Sign in
+            signInWithEmailAndPassword(
+                AUTH,
+                email?.current?.value,
+                password?.current?.value
+            )
+                .then((userCredential) => {
+                    // Signed in
+                    const user = userCredential.user;
+                    navigate('/browse');
+                })
+                .catch((error) => {
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    setErrMessage(errorCode + '-' + errorMessage);
+                });
+        }
+    };
 
     return (
         <div className=''>
@@ -14,32 +94,62 @@ const Login = () => {
                     className='w-full h-full object-cover'
                 />
             </div>
-            <form className='absolute inset-0 flex items-center justify-center'>
-                <form className='w-3/12 bg-black bg-opacity-80 p-8 rounded-lg text-white'>
-                    <h1 className='font-bold text-3xl my-2 mb-8'>{signIn ? 'Sign In' : 'Sign Up'}</h1>
-                    {!signIn && <input
-                        type='text'
-                        placeholder='Email'
-                        className='p-4 my-2 w-full bg-gray-700'
-                    />}
+            <form
+                onSubmit={(e) => e.preventDefault()}
+                className='w-3/12 absolute p-6 bg-black my-24 mx-auto right-0 left-0 text-white rounded-lg bg-opacity-80'
+            >
+                <h1 className='font-bold text-3xl py-4'>
+                    {isSignInForm ? 'Sign In' : 'Sign Up'}
+                </h1>
+
+                {!isSignInForm && (
                     <input
+                        ref={name}
                         type='text'
-                        placeholder='Email'
-                        className='p-4 my-2 w-full bg-gray-700'
+                        placeholder='Full Name'
+                        className='p-4 my-4 w-full bg-gray-700'
                     />
+                )}
+                <input
+                    ref={email}
+                    type='text'
+                    placeholder='Email Address'
+                    className='p-4 my-4 w-full bg-gray-700'
+                />
+                <div className='relative'>
                     <input
-                        type='password'
+                        ref={password}
+                        type={showPassword ? 'text' : 'password'}
                         placeholder='Password'
-                        className='p-4 my-2 w-full bg-gray-700'
+                        className='p-4 my-4 w-full bg-gray-700'
                     />
                     <button
-                        type='submit'
-                        className='p-4 my-2 mt-8 w-full bg-red-600 text-white rounded'
+                        type='button'
+                        onClick={() => {
+                            setShowPassword(!showPassword);
+                        }}
+                        className='absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5'
                     >
-                        {signIn ? 'Sign In' : 'Sign Up'}
+                        {showPassword ? 'Hide' : 'Show'}
                     </button>
-                    <p className='py-4 cursor-pointer hover:underline' onClick={() => {setSignIn(!signIn)}}>{signIn ? 'New to Netflix? Sign up now.' : 'Already a User? Sign in now.'}</p>
-                </form>
+                </div>
+                <p className='text-red-500 text-lg py-3'>{errMessage}</p>
+                <button
+                    className='p-4 my-6 bg-red-700 w-full rounded-lg'
+                    onClick={handleSubmitForm}
+                >
+                    {isSignInForm ? 'Sign In' : 'Sign Up'}
+                </button>
+                <p
+                    className='py-4 cursor-pointer hover:underline'
+                    onClick={() => {
+                        setSignIn(!isSignInForm);
+                    }}
+                >
+                    {isSignInForm
+                        ? 'New to Netflix? Sign Up Now'
+                        : 'Already registered? Sign In Now.'}
+                </p>
             </form>
         </div>
     );
