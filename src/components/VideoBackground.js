@@ -7,7 +7,7 @@ const VideoBackground = ({ movieId }) => {
     const data = useMovieTrailer(movieId);
 
     return (
-        <div>
+        <div className=' w-screen'>
             <iframe
                 className='w-screen aspect-video'
                 src={
@@ -15,7 +15,7 @@ const VideoBackground = ({ movieId }) => {
                     store?.trailerVideo?.key +
                     '?&autoplay=1&mute=1'
                 }
-                title='We Had 4 Mages...So I Had To Do This | Mobile Legends'
+                title='YouTube video player'
                 allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share'
             ></iframe>
         </div>
