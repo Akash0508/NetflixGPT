@@ -13,6 +13,8 @@ export const SUPPORTED_LANGUAGES = [
     { identifier: 'bhojpuri', name: 'bhojpuri' },
 ];
 
+export const OPENAI_KEY = "'" + process.env.REACT_APP_OPENAI_KEY + "'";
+
 export const GET_MOVIE_BACKGROUND = (id) => {
     return (
         'https://api.themoviedb.org/3/movie/' + id + '/videos?language=en-US'
@@ -25,7 +27,6 @@ export const API_OPTIONS = {
     method: 'GET',
     headers: {
         accept: 'application/json',
-        Authorization:
-            'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJkZTVmZjRmOWJiMDk3YTg5M2QyOGFiNmE1NjBjNzFlNSIsIm5iZiI6MTcyMTExODgzOC42NTA1MjgsInN1YiI6IjY2OTYyZjA0NDFkZGFjMTU0YjdiODgzZSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.PBFFGGGF-iXle17_uDfzXLhtZ3nY0u57NY7alojWXn4',
+        Authorization: 'Bearer ' + process.env.REACT_APP_TMDB_KEY,
     },
 };
